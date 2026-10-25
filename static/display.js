@@ -28,6 +28,13 @@ function applyMetrics() {
     card.style.setProperty("--accent", card.dataset.color);
     const bar = card.querySelector(".bar span");
     if (bar) bar.style.width = Math.min(100, Math.max(0, Number(card.dataset.percent))) + "%";
+    const value = card.querySelector(".value");
+    // Keep larger numbers readable even with long values or increased text size.
+    let size = parseFloat(getComputedStyle(value).fontSize);
+    while ((value.scrollWidth > value.clientWidth || value.scrollHeight > value.clientHeight) && size > 20) {
+      size -= 1;
+      value.style.fontSize = size + "px";
+    }
   });
 }
 function rebuildSlides() {
@@ -77,6 +84,7 @@ function tick() {
   document.querySelector("#clock").textContent = zonedTime(date);
   document.querySelector("#night time").textContent = zonedTime(date);
   document.querySelector("#date").textContent = new Intl.DateTimeFormat("hu-HU", {timeZone:"Europe/Budapest",month:"short",day:"numeric",weekday:"short"}).format(date);
+  document.body.classList.toggle("night-blank", state?.settings.night_mode === "blank");
   const connection = document.querySelector("#connection");
   const offline = !lastOk || Date.now() - lastOk > 20000;
   connection.classList.toggle("offline", offline);

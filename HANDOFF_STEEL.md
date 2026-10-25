@@ -20,59 +20,52 @@
 - A Chrome fordítási ajánlata kikapcsolva a saját kioszkprofilban; magyar nyelv és `notranslate` jelölés beállítva.
 - A laptopos `MiniPI-CodexBridge` feladat kétpercenként működik. Az átadáskor ismét engedélyezett: utolsó ellenőrzött futás 09:12:30, eredmény 0; Pi-adat frissült 09:12:37-kor. A költözés még nem zárható le.
 
-## Legfontosabb nyitott feladat: STEEL időzített Codex-küldés
+## STEEL időzített Codex-küldés: 2026-10-25-i hibajavítás
 
-A felhasználó a friss csomagot a STEEL-en sikeresen futtatta:
+- A tényleges futtatógép `STEEL-Legend`, a forrás checkoutja `D:\GITHUB\Mini_PI`, a párosított gyűjtő továbbra is `D:\GITHUB\P_config`.
+- A 09:26 és 09:28 időzített futás `PermissionError` hibát adott. A `.local` mappa tulajdonosa a rendszergazdák csoportja volt; ACL-je SYSTEM, rendszergazdák és tulajdonosi jogok hozzáférését tartalmazta. A korlátozott `yoli9` task nem olvashatta a párosítási fájlt. A 09:28-as diagnosztika: `config_readable=false`.
+- A régi diagnosztikai action a nem írható `.local/bridge-run.log` fájlba irányított, majd `exit $LASTEXITCODE` parancsot futtatott. Ez 0-t is jelentett tényleges küldés nélkül; a korábbi 0-s eredmények nem bizonyítékok.
+- A felhasználó külön jóváhagyással és saját PowerShellből a `yoli9` SID-nek csak RX jogot adott a `.local` mappára és R jogot a `bridge-config.json` fájlra. A kulcs tartalma, DPAPI-védelme és a többi jogosultság megmaradt.
+- A task action most rejtett Windows PowerShellből a `D:\GITHUB\Mini_PI\tools\run_bridge.ps1` fájlt indítja, `-CollectorRoot D:\GITHUB\P_config` paraméterrel. A principal és a PT2M ütemezés megmaradt. A runner konzolos Pythont indít, megőrzi a kilépési kódot, és indítási/naplózási hibánál 1-et ad vissza.
+- Helyi, Gitből kizárt bizonyítékok: `.local/steel-bridge-run.jsonl` (gép, kezdet/vég, kilépési kód, hibatípus); `.local/steel-pi-evidence.jsonl` (Pi API-visszaolvasások); `.local/steel-task-before*.xml` (actioncsere előtti taskmentés). Ezek nem tartalmaznak kulcsot.
+- A runner jelenleg a forrás checkoutjára hivatkozik: a `D:\GITHUB\Mini_PI` könyvtárat ne mozgasd el a task action frissítése nélkül.
+- A javító parancs: `& D:\GITHUB\Mini_PI\tools\repair_steel_bridge.ps1`. Csak az actiont cseréli, előbb taskmentést készít; a Windows-feladat módosítása a Codex-folyamatból hozzáférés-megtagadást adott, ezért a felhasználó futtatta.
+- Új telepítésnél a `.local` könyvtár PowerShellből létrejön a Python-párosítás előtt, így örökli a csomag felhasználói engedélyét. A csomagkészítő már a runnert is csomagolja; a Pi-n tárolt ZIP-et ebben a körben nem cseréltük. A `tools/install_bridge.ps1 -UpdateExisting` továbbra is megőrzi az actiont; a szándékos cseréhez `-RepairAction` is szükséges.
 
-```text
-Codex CLI megtalalva: C:\Program Files\WindowsApps\OpenAI.Codex_26.1016.6573.0_x64__2p2nqsd0c76g0\app\resources\codex.exe
-Sajat gephez vedett parositas elkeszult.
-Codex keretek frissítve.
-MiniPI-CodexBridge Ready
-```
+A kétperces STEEL Codex-frissítés igazolt, három egymást követő automatikus futással (Europe/Budapest, 2026-10-25):
 
-Az első kézi adatküldés sikerült, az időzített feladat viszont hibás:
+| STEEL indítás | Befejezés | Task/runner eredmény | Pi Codex updated_at |
+| --- | --- | --- | --- |
+| 09:30:11 | 09:30:17 | 0 / sent | Később olvasva; külön forrásként nem használtuk |
+| 09:32:11 | 09:32:17 | 0 / sent | 09:32:18.236900 |
+| 09:34:11 | 09:34:17 | 0 / sent | 09:34:18.088695 |
 
-```text
-LastRunTime    : 2026. 10. 25. 9:04:10
-LastTaskResult : 1
-NextRunTime    : 2026. 10. 25. 9:06:09
-```
+A két utolsó Pi-frissítés között 119,852 másodperc telt el. A Pi-visszaolvasás 09:32:21 és 09:34:32 szerveridőnél történt; mindkétszer `source=codex`, érték 61. A helyi runner `host=STEEL-LEGEND` rekordjai bizonyítják az időzített STEEL-küldést, nem pusztán a közös Pi-beérkezésre támaszkodunk. A task ismétlődése PT2M; utolsó eredménye 0, következő futása az ellenőrzéskor 09:36:09. Kézi taskindítást nem végeztünk.
 
-A hiba oka még nem ismert. A laptopon a rejtett `pythonw.exe` futásból a Store-os CLI felismerése, a Codex-lekérdezés és a DPAPI-párosítás olvasása is sikeresen lefutott. Ez a STEEL hibáját nem cáfolja, de nem indokol általános `pythonw`-hibát állítani.
+A laptopos tartalékot nem állítottuk le; külön laptopelérés nincs. A Codex-átállás bizonyítási feltétele teljesült, a laptopos `MiniPI-CodexBridge` most már a laptop saját Feladatütemezőjében letiltható. A böngészős gyűjtő három szolgáltatásának ellenőrzése továbbra is nyitott.
 
-A legutóbb elküldött diagnosztika a STEEL feladatának actionjét rejtett PowerShell + `python.exe` futásra állítja, és az eredményt ebbe írja:
+Ellenőrzések: 3 bridge-, 3 CLI-felismerési és 1 Windows-runner teszt sikeres; 14 böngészős parser-ellenőrzés sikeres. A teljes Python-discovery két importhibával nem futott végig: a rendszer-Pythonból hiányzik a Werkzeug, a gyűjtő környezetéből a Pillow/Werkzeug. Az alkalmazásfüggőségeket nem telepítettük a párosított gyűjtőbe. A négy módosított/új PowerShell-script szintaxisa ellenőrzött.
 
-```text
-D:\GITHUB\P_config\.local\bridge-run.log
-```
+## Kijelző finomítása: Pi-re telepítve, 2026-10-25 10:20
 
-A felhasználó ezt még nem igazolta vissza. Először olvasd ki a valódi task actiont, principalt és a naplót; ne kérj újabb csomagletöltést találgatott javításhoz.
-
-```powershell
-Get-ScheduledTaskInfo -TaskName MiniPI-CodexBridge |
-  Format-List LastRunTime,LastTaskResult,NextRunTime
-(Get-ScheduledTask -TaskName MiniPI-CodexBridge).Actions |
-  Format-List Execute,Arguments,WorkingDirectory
-(Get-ScheduledTask -TaskName MiniPI-CodexBridge).Principal |
-  Format-List UserId,LogonType,RunLevel
-Get-Content D:\GITHUB\P_config\.local\bridge-run.log
-```
-
-Figyelem: a jelenlegi `tools/install_bridge.ps1 -UpdateExisting` a meglévő actiont megőrzi. Emiatt a telepítő újrafuttatása önmagában nem cseréli le a korábbi vagy diagnosztikai actiont.
-
-A Pi-n korábban kézi módban volt a Codex-kártya; ezt automatikusra visszakapcsoltuk. A kézi módú kártyát a szerver szándékosan nem írja felül, miközben a régebbi kliens még általános sikerüzenetet írhat. Ellenőrizd a tényleges adatbázis- vagy `/api/display` frissítési időt is.
-
-Sikerfeltétel: legalább két, időzítetten indult sikeres küldés a STEEL-ről, friss Pi-adattal. A laptopos küldő maradjon működő tartalék, amíg ez nincs bizonyítva; utána a felhasználó kérésének megfelelően leállítható. A Pi érkezési ideje önmagában nem igazolja a STEEL-forrást, amíg mindkét küldő fut.
+- 8 px belső biztonsági keret, beljebb húzott óra/dátum; a fő kártyaszám 49 helyett 54 px. A szám szükség esetén kisebbre igazodik, hogy növelt betűméretnél se vágódjon le.
+- Új `night_mode`: `clock` (halvány óra, kompatibilis alapérték) vagy `blank` (fekete kép). Az adminban választható, az időzítés és az érintéses 30 másodperces felébresztés megmaradt. A háttérvilágítás hardveres kikapcsolását ez nem végzi.
+- Élőben mentett és szolgáltatás-újraindítás után visszaolvasott beállítás: `night_enabled=true`, `night_mode=blank`, `night_start=23:00`, `night_end=08:00`; 08:00–23:00 között normál kijelzés. 08:00–23:00 között normál kijelzés működik.
+- 20 Python-teszt és 14 parser-ellenőrzés sikeres az elkülönített `.local/qa-venv` környezetben. Playwright: 480×320 kijelző, 390 és 360 px admin, 100/125% betűméret; 23:00/08:00 határidők, fekete/óra mód, érintés és beállításmentés ellenőrzött.
+- Helyi előnézet: `.local/display-after.png`; forráscsomag: `.local/mini-pi-display-update.zip` (csak app.py, display.css/js, admin.html). A felhasználó külön jóváhagyásával a négy fájl feltöltve. A távoli kiinduló forrás Git HEAD-del egyezett; a feltöltött fájlok SHA256-ellenőrzése sikeres.
+- SSH: a felhasználó külön terminálban, rejtett bevitellel adta meg a jelszót, és jóváhagyta a 192.168.50.245 hostkulcsát. A jelszót nem mentettük fájlba/naplóba, SSH-kulcsot és known_hosts fájlt nem módosítottunk. A kapcsolat lezárult.
+- Mentés a Pi-n, az alkalmazás könyvtárán kívül: `/home/zoli/mini-pi-backups/display-20261025T092022533265Z`. Tartalom: a négy eredeti forrásfájl, online SQLite-mentés (600-as jogosultság), előző éjszakai beállítások. Az adatbázist nem cseréltük le; csak a négy jóváhagyott kijelzőbeállítás változott.
+- Újraindított szolgáltatások: `mini-pi.service`, `mini-pi-kiosk.service`. Visszaolvasás: szerver `active`, `enabled`; kioszk `active`; labwc autostart marker jelen. Az első health-próba az újraindulás alatt kapcsolódási hibát adott, az automatikus ismétlés már `ok`. Teljes Pi-rebootot nem végeztünk.
+- Élő HTTP/API és Playwright 480×320 ellenőrzés sikeres, JavaScript-hiba nélkül. Óra: jobb szél 456 px; dátum: jobb szél 456 px, alsó szél 303,5 px. Kártyaszámok: 54 px, vízszintes/függőleges levágás nélkül. Élő képernyőkép: `.local/display-live-after.png`; telepítési napló: `.local/pi-display-deployment.jsonl`.
 
 ## Grok, Instagram, TikTok
 
 - Felhasználói cél: Grok előfizetés maradék heti kerete; Instagram `zoltan.ppp`, TikTok `@zoltan.ppp` követőszám. Facebook-oldalt még nem adott meg.
 - A `browser_extension/` MV3-bővítmény elkészült. Kétpercenként a bejelentkezett Grok használati oldalát és a két konkrét profilt olvassa; csak számokat küld a Pi `/api/ingest/browser` végpontjára. Nem másol cookie-t vagy bejelentkezést.
-- A felhasználó engedélyezte a bővítmény betöltését, majd az állandó STEEL gépet választotta gyűjtőnek. A STEEL-en a betöltés és a három sikeres küldés még nem igazolt. A laptopon nem telepítettük.
+- A felhasználó engedélyezte a bővítmény betöltését, majd az állandó STEEL gépet választotta gyűjtőnek. A felhasználó a STEEL-en betöltötte, és működő küldést jelzett vissza. A Grok `source=browser` állapota és ismételt frissülése a Pi API-jából igazolt; az Instagram/TikTok külön élő ellenőrzése nem történt meg. A laptopon nem telepítettük.
 - A párosított STEEL-csomag `browser_extension/bootstrap.json` fájlját a telepítő készíti el. Ez privát fájl, Gitből nem pótolható. A tiszta forrás `browser_extension/` könyvtára nem tartalmaz kulcsot.
 - STEEL Chrome: `chrome://extensions` → Fejlesztői mód → Kicsomagolt bővítmény betöltése → `D:\GITHUB\P_config\browser_extension`. A STEEL saját böngészőjében kell bejelentkezni a szolgáltatásokba. A Chrome-nak és a Windows-felhasználói munkamenetnek futnia kell.
-- Átadáskor a Grok-kártya még kézi, az Instagram/TikTok nincs bekötve. Ne állíts kész, automatikus kapcsolatot a bővítmény élő ellenőrzése nélkül.
+- A Grok már automatikus (`source=browser`); a 10:21-es élő kijelzőpróbában 28,03% maradék keretet mutatott. Az Instagram/TikTok állapotát ettől külön kell ellenőrizni.
 - A bővítmény szándékosan figyeli a pontos profilt és URL-t. Másik profilra navigálás, hiányzó/kerekített számláló, login vagy CAPTCHA esetén nem küld hibás nullát. Utolsó adat megmarad, tíz perc után elavulási jelzéssel.
 
 ## Ellenőrzések és megőrzés

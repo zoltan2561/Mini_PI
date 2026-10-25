@@ -71,6 +71,22 @@ class MiniPiTest(unittest.TestCase):
         self.assertEqual(self.post("/admin/settings", {**settings, "slide_seconds": "0"}).status_code, 400)
         self.assertEqual(other.get("/api/display").json["settings"]["slide_seconds"], 5)
 
+    def test_night_display_schedule_survives_restart_and_rejects_invalid_mode(self):
+        self.login()
+        settings = {"title": "Mini PI", "mode": "dashboard", "slide_seconds": "15",
+                    "photo_seconds": "20", "photo_fit": "cover", "font_scale": "100",
+                    "orientation": "auto", "night_enabled": "on", "night_mode": "blank",
+                    "night_start": "23:00", "night_end": "08:00"}
+        self.assertEqual(self.post("/admin/settings", settings).status_code, 302)
+        other = create_app(self.directory.name, testing=True).test_client()
+        saved = other.get("/api/display").json["settings"]
+        self.assertEqual((saved["night_enabled"], saved["night_mode"], saved["night_start"], saved["night_end"]),
+                         (True, "blank", "23:00", "08:00"))
+        self.assertEqual(self.post("/admin/settings", {**settings, "night_mode": "invalid"}).status_code, 400)
+        self.assertEqual(self.client.get("/api/display").json["settings"]["night_mode"], "blank")
+        self.assertEqual(self.post("/admin/settings", {**settings, "night_mode": "clock"}).status_code, 302)
+        self.assertEqual(self.client.get("/api/display").json["settings"]["night_mode"], "clock")
+
     def test_ingest_auth_validation_and_atomicity(self):
         self.assertEqual(self.client.post("/api/ingest/codex", json={"cards": []}).status_code, 401)
         self.setting("ingest_token_hash", generate_password_hash("test-bridge-secret"))

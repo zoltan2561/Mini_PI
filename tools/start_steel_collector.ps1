@@ -23,6 +23,9 @@ if ($LASTEXITCODE -ne 0) {
     throw 'A Codex CLI nem talalhato. Nyisd meg a Store-os Codexet, vagy telepitsd a kulon CLI-t, majd futtasd ujra a telepitot.'
 }
 Write-Host ('Codex CLI megtalalva: ' + $miniCodexPath)
+# Inherit the collector's explicit user grant. Python 3.13 mkdir(mode=0700)
+# under an elevated installer can leave only administrator/owner access.
+New-Item -ItemType Directory -Path (Join-Path $miniRoot '.local') -Force | Out-Null
 $miniConfigure = @'
 import json,sys,pathlib
 root=pathlib.Path(sys.argv[1])

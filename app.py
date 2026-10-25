@@ -26,7 +26,7 @@ DEFAULT_CARDS = [
 ]
 DEFAULT_SETTINGS = {"title": "Zoli / desk", "mode": "mixed", "slide_seconds": 15,
                     "photo_seconds": 20, "photo_fit": "cover", "font_scale": 100,
-                    "night_enabled": False, "night_start": "23:00", "night_end": "07:00",
+                    "night_enabled": False, "night_start": "23:00", "night_end": "08:00", "night_mode": "clock",
                     "orientation": "auto"}
 
 
@@ -256,6 +256,9 @@ def create_app(data_dir=None, testing=False):
                 datetime.strptime(value, "%H:%M")
                 values[key] = value
             values["night_enabled"] = request.form.get("night_enabled") == "on"
+            values["night_mode"] = request.form.get("night_mode", get_setting("night_mode", "clock"))
+            if values["night_mode"] not in ("clock", "blank"):
+                raise ValueError()
         except (ValueError, TypeError):
             abort(400, "Érvénytelen kijelzőbeállítás.")
         for key, value in values.items():

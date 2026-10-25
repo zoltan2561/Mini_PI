@@ -11,7 +11,7 @@ Helyben futó dashboard és digitális képkeret Raspberry Pi 4B-re, 480×320-as
 - A kézi adatok és a Codex-adatok forrása, frissítési ideje látható. Tíz percnél régebbi Codex-adat figyelmeztetést kap; a hiányzó adat nem nulla.
 - Ha az előfizetés csak egy Codex-keretet közöl, a nem létező második keret nem foglal külön helyet a kijelzőn. A kártya az adminban továbbra is kezelhető.
 - A képek helyben, JPEG-ként, legfeljebb 1920×1920-as méretben tárolódnak. A feltöltés legfeljebb 12 MB és 30 megapixel lehet. A fotók sorrendje és láthatósága állítható.
-- Az éjszakai nézet sötét óraképernyő. A kijelző háttérvilágításának hardveres kikapcsolása nincs megvalósítva.
+- Az éjszakai nézet lehet fekete kép vagy halvány óra. Az adminban megadható például a 23:00–08:00 időszak; nappal a normál nézet tér vissza. A kijelző háttérvilágításának hardveres kikapcsolása nincs megvalósítva.
 
 ## Adatkapcsolatok
 
@@ -45,7 +45,7 @@ A Codex ütemezésének módosítása a meglévő beállítások megőrzésével
 
 ### Folyamatos működés STEEL-Legend gépről
 
-A Codex-küldő jelenleg még a laptopon fut kétpercenként. A STEEL-Legend átállás elő van készítve, de telepítés és ottani élő ellenőrzés nélkül nem tekinthető késznek. A STEEL az ellenőrzéskor `192.168.50.102` címen volt elérhető; SSH/WinRM nem volt nyitva, a Windows-megosztás nem engedett hozzáférést.
+A STEEL-Legend párosított Codex-küldője a `D:\GITHUB\P_config` mappából fut, kétperces ütemezéssel. A 2026-10-25-i jogosultsági javítást és az élő futások bizonyítékait a [HANDOFF_STEEL.md](HANDOFF_STEEL.md) tartalmazza. A laptopos tartalék leállítása még külön, a laptopon végzendő lépés.
 
 A Pi adminjának Kapcsolatok részében letölthető a **STEEL-Legend telepítő**. A ZIP csak adminbelépés után érhető el, nem cache-elhető, és korlátozott adatküldő kulcsokat tartalmaz. Az `instance/steel-collector.zip` és a helyi `.local/MiniPI-STEEL-collector.zip` nem nyilvános forrásfájl.
 
@@ -57,7 +57,7 @@ A STEEL-en csomagold ki állandó helyre, például `D:\Mini_PI_Collector`, majd
 
 A telepítő ellenőrzi a gép nevét, a Pi elérhetőségét, a Python és a Codex meglétét; a STEEL saját Windows-felhasználójához védi a helyi kulcsot, majd kétperces Codex-feladatot készít. A Chrome-bővítményt ezen a gépen is egyszer be kell tölteni a csomag `browser_extension` mappájából, és a szolgáltatásokba itt kell bejelentkezni. Laptopos webes munkamenetet és Codex-bejelentkezést nem másol át.
 
-A Chrome-nak és a Windows-felhasználói munkamenetnek a STEEL-en is futnia kell. A gép bekapcsolt állapota önmagában nem elég. A laptopos feladatot csak a STEEL feladatának sikeres futása és a három böngészős adat igazolt beérkezése után kapcsold ki. A saját készítésű Chrome-bővítmény még nincs telepítve egyik gépre sem.
+A Chrome-nak és a Windows-felhasználói munkamenetnek a STEEL-en is futnia kell. A gép bekapcsolt állapota önmagában nem elég. A laptopos Codex-feladatot csak legalább két sikeres, időzített STEEL-küldés és a Pi-adat frissülésének igazolása után kapcsold ki. A Chrome-bővítmény STEEL-telepítését a felhasználó visszaigazolta; a Grok ismételt automatikus frissülése API-ból is ellenőrzött. Az Instagram/TikTok külön élő ellenőrzése még nem történt meg.
 
 ## Pi telepítés és működés
 
