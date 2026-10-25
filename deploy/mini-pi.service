@@ -1,0 +1,23 @@
+[Unit]
+Description=Mini PI dashboard and photo frame
+After=network.target
+
+[Service]
+Type=simple
+User=zoli
+Group=zoli
+WorkingDirectory=/home/zoli/mini-pi
+Environment=MINI_PI_DATA=/home/zoli/mini-pi/instance
+Environment=MINI_PI_ADMIN_URL=zolitft.local:8080/admin
+ExecStart=/home/zoli/mini-pi/.venv/bin/python /home/zoli/mini-pi/app.py
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/zoli/mini-pi/instance
+
+[Install]
+WantedBy=multi-user.target

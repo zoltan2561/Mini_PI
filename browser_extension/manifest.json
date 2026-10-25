@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Mini PI · saját statisztikák",
+  "version": "1.0.0",
+  "description": "A Grok-keret és a megadott saját profilok követőszámai a helyi Mini PI kijelzőre.",
+  "permissions": ["alarms", "storage", "tabs"],
+  "host_permissions": ["http://192.168.50.246/*", "http://zolitft.local/*"],
+  "background": {"service_worker": "background.js"},
+  "options_page": "options.html",
+  "action": {"default_title": "Mini PI adatküldő beállításai"},
+  "content_scripts": [{
+    "matches": ["https://grok.com/dashboard/usage*", "https://www.instagram.com/zoltan.ppp/*", "https://www.tiktok.com/@zoltan.ppp*"],
+    "js": ["extract.js", "content.js"],
+    "run_at": "document_idle"
+  }]
+}

@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+const {exactCount,remaining}=require('../browser_extension/extract.js');
+assert.equal(exactCount('835'),835);
+assert.equal(exactCount('0'),0);
+assert.equal(exactCount('1 234'),1234);
+assert.equal(exactCount('1,234'),1234);
+assert.equal(exactCount('1.234'),1234);
+assert.equal(exactCount('1.2K'),null);
+assert.equal(exactCount('52K'),null);
+assert.equal(exactCount(''),null);
+assert.equal(exactCount('Captcha'),null);
+assert.equal(remaining('70.07859397239928'),29.92);
+assert.equal(remaining('100'),0);
+assert.equal(remaining(null),null);
+assert.equal(remaining(''),null);
+assert.equal(remaining('nan'),null);
+console.log('14 browser parser assertions passed');
