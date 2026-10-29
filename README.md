@@ -15,7 +15,7 @@ Helyben futó dashboard és digitális képkeret Raspberry Pi 4B-re, 480×320-as
 
 ## Adatkapcsolatok
 
-**Codex:** a Windows-gépen a `MiniPI-CodexBridge` ütemezett feladat kétpercenként, illetve bejelentkezéskor fut. A helyi, bejelentkezett Codex CLI `account/rateLimits/read` műveletét használja. Nem indít modellhívást, és a Pi nem kap Codex-bejelentkezési adatot. Ha a számítógép nem fut, a kijelzőn megmarad az utolsó érték, elavulási jelzéssel.
+**Codex:** a Windows-gépen a `MiniPI-CodexBridge` ütemezett feladat kétpercenként, illetve bejelentkezéskor fut. A `pythonw.exe` indító és az ablak nélküli gyermekfolyamat nem nyit terminálablakot. A helyi, bejelentkezett Codex CLI `account/rateLimits/read` műveletét használja. Nem indít modellhívást, és a Pi nem kap Codex-bejelentkezési adatot. Ha a számítógép nem fut, a kijelzőn megmarad az utolsó érték, elavulási jelzéssel.
 
 A `tools/codex_bridge.py` csak a két Codex-kártyát frissítheti. A kézi módba állított kártyát nem írja felül. Az adminban visszakapcsolható az automatikus adat. A helyi párosítás az ignorált `.local/bridge-config.json` fájlban, Windows DPAPI-védelemmel tárolódik; ez nem hordozható más Windows-felhasználóhoz.
 
@@ -56,6 +56,8 @@ A STEEL-en csomagold ki állandó helyre, például `D:\Mini_PI_Collector`, majd
 ```
 
 A telepítő ellenőrzi a gép nevét, a Pi elérhetőségét, a Python és a Codex meglétét; a STEEL saját Windows-felhasználójához védi a helyi kulcsot, majd kétperces Codex-feladatot készít. A Chrome-bővítményt ezen a gépen is egyszer be kell tölteni a csomag `browser_extension` mappájából, és a szolgáltatásokba itt kell bejelentkezni. Laptopos webes munkamenetet és Codex-bejelentkezést nem másol át.
+
+A bővítmény csak a Pi-n bekapcsolt kártyák oldalait nyitja meg és frissíti. Kikapcsolt kártyához az adatküldés is szünetel; visszakapcsolás után a következő kétperces körben folytatódik. Ha a Pi nem érhető el, nem frissít közösségi oldalt.
 
 A Chrome-nak és a Windows-felhasználói munkamenetnek a STEEL-en is futnia kell. A gép bekapcsolt állapota önmagában nem elég. A laptopos Codex-feladatot csak legalább két sikeres, időzített STEEL-küldés és a Pi-adat frissülésének igazolása után kapcsold ki. A Chrome-bővítmény STEEL-telepítését a felhasználó visszaigazolta; a Grok ismételt automatikus frissülése API-ból is ellenőrzött. Az Instagram/TikTok külön élő ellenőrzése még nem történt meg.
 

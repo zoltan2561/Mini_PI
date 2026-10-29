@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Mini PI · saját statisztikák",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Grok-keret és a megadott saját profilok követőszámai a helyi Mini PI kijelzőre.",
   "permissions": ["alarms", "storage", "tabs"],
   "host_permissions": ["http://192.168.50.246/*", "http://zolitft.local/*"],

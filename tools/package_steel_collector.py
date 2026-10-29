@@ -25,7 +25,7 @@ A csomag korlatozott, csak a Mini PI kartyaertekeit iro kulcsokat tartalmaz.
 Ne oszd meg es ne tedd nyilvanos Git-taroloba!
 '''
 with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as package:
-    for name in ['codex_bridge.py','install_bridge.ps1','run_bridge.ps1','start_steel_collector.ps1']:
+    for name in ['codex_bridge.py','install_bridge.ps1','run_bridge.ps1','run_bridge.pyw','start_steel_collector.ps1']:
         package.write(root/'tools'/name,'tools/'+name)
     for source in (root/'browser_extension').iterdir():
         if source.is_file():package.write(source,'browser_extension/'+source.name)

@@ -9,8 +9,8 @@ $miniTaskName = 'MiniPI-CodexBridge'
 $miniExisting = Get-ScheduledTask -TaskName $miniTaskName -ErrorAction SilentlyContinue
 $miniRepeat = New-ScheduledTaskTrigger -Once -At ((Get-Date).AddMinutes(1)) -RepetitionInterval (New-TimeSpan -Minutes $IntervalMinutes)
 $miniDescription = "Mini PI: Codex maradék keretek küldése $IntervalMinutes percenként, modellhívás nélkül."
-$miniRunner = Join-Path $PSScriptRoot 'run_bridge.ps1'
-$miniAction = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -Argument ('-NoProfile -NonInteractive -WindowStyle Hidden -File "' + $miniRunner + '"') -WorkingDirectory $miniProjectRoot
+$miniRunner = Join-Path $PSScriptRoot 'run_bridge.pyw'
+$miniAction = New-ScheduledTaskAction -Execute (Join-Path $miniProjectRoot '.venv\Scripts\pythonw.exe') -Argument ('"' + $miniRunner + '"') -WorkingDirectory $miniProjectRoot
 if ($miniExisting) {
     if (-not $UpdateExisting) { throw 'A MiniPI-CodexBridge feladat már létezik. Frissítéshez használd az -UpdateExisting kapcsolót.' }
     $miniOtherTriggers = @($miniExisting.Triggers | Where-Object { -not $_.Repetition.Interval })

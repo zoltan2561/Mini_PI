@@ -26,7 +26,7 @@
 - A 09:26 és 09:28 időzített futás `PermissionError` hibát adott. A `.local` mappa tulajdonosa a rendszergazdák csoportja volt; ACL-je SYSTEM, rendszergazdák és tulajdonosi jogok hozzáférését tartalmazta. A korlátozott `yoli9` task nem olvashatta a párosítási fájlt. A 09:28-as diagnosztika: `config_readable=false`.
 - A régi diagnosztikai action a nem írható `.local/bridge-run.log` fájlba irányított, majd `exit $LASTEXITCODE` parancsot futtatott. Ez 0-t is jelentett tényleges küldés nélkül; a korábbi 0-s eredmények nem bizonyítékok.
 - A felhasználó külön jóváhagyással és saját PowerShellből a `yoli9` SID-nek csak RX jogot adott a `.local` mappára és R jogot a `bridge-config.json` fájlra. A kulcs tartalma, DPAPI-védelme és a többi jogosultság megmaradt.
-- A task action most rejtett Windows PowerShellből a `D:\GITHUB\Mini_PI\tools\run_bridge.ps1` fájlt indítja, `-CollectorRoot D:\GITHUB\P_config` paraméterrel. A principal és a PT2M ütemezés megmaradt. A runner konzolos Pythont indít, megőrzi a kilépési kódot, és indítási/naplózási hibánál 1-et ad vissza.
+- A reggeli javítás rejtett PowerShellből indította a `run_bridge.ps1` fájlt. Ezt az esti ablakfelugrás-javítás felváltotta; a jelenlegi actiont lásd alább. A principal, a párosítás és a PT2M ütemezés megmaradt.
 - Helyi, Gitből kizárt bizonyítékok: `.local/steel-bridge-run.jsonl` (gép, kezdet/vég, kilépési kód, hibatípus); `.local/steel-pi-evidence.jsonl` (Pi API-visszaolvasások); `.local/steel-task-before*.xml` (actioncsere előtti taskmentés). Ezek nem tartalmaznak kulcsot.
 - A runner jelenleg a forrás checkoutjára hivatkozik: a `D:\GITHUB\Mini_PI` könyvtárat ne mozgasd el a task action frissítése nélkül.
 - A javító parancs: `& D:\GITHUB\Mini_PI\tools\repair_steel_bridge.ps1`. Csak az actiont cseréli, előbb taskmentést készít; a Windows-feladat módosítása a Codex-folyamatból hozzáférés-megtagadást adott, ezért a felhasználó futtatta.
@@ -45,6 +45,16 @@ A két utolsó Pi-frissítés között 119,852 másodperc telt el. A Pi-visszaol
 A laptopos tartalékot nem állítottuk le; külön laptopelérés nincs. A Codex-átállás bizonyítási feltétele teljesült, a laptopos `MiniPI-CodexBridge` most már a laptop saját Feladatütemezőjében letiltható. A böngészős gyűjtő három szolgáltatásának ellenőrzése továbbra is nyitott.
 
 Ellenőrzések: 3 bridge-, 3 CLI-felismerési és 1 Windows-runner teszt sikeres; 14 böngészős parser-ellenőrzés sikeres. A teljes Python-discovery két importhibával nem futott végig: a rendszer-Pythonból hiányzik a Werkzeug, a gyűjtő környezetéből a Pillow/Werkzeug. Az alkalmazásfüggőségeket nem telepítettük a párosított gyűjtőbe. A négy módosított/új PowerShell-script szintaxisa ellenőrzött.
+
+## Ablakfelugrás javítása: 2026-10-25 este
+
+- A konzolos PowerShell `-WindowStyle Hidden` kapcsolója csak indulás után rejti el az ablakot. A task most közvetlenül a `D:\GITHUB\P_config\.venv\Scripts\pythonw.exe` GUI-indítót használja, a `D:\GITHUB\Mini_PI\tools\run_bridge.pyw` fájllal; PowerShell/CMD nincs az időzített indítási láncban.
+- A `.pyw` indító a valódi `codex_bridge.py` fájlt konzolos Pythonnal, érvényes stdin/stdout/stderr csövekkel és `CREATE_NO_WINDOW` jelzővel indítja. Naplózása titokmentes, a hibakódot megőrzi; naplózási hiba esetén 1-et ad vissza. A régi PS runner kompatibilitásból megmaradt.
+- A módosítást saját Windows UAC-jóváhagyás után emelt segédfolyamat alkalmazta; az action visszaolvasása igazolta a cserét. A task továbbra is korlátozott felhasználóval fut. Párosítási fájl, ACL, titok és Pi-kód nem változott.
+- A telepítő, a javító és a csomagkészítő az új `.pyw` indítót használja/tartalmazza. A javító sikertelen actioncsere esetén hibát ad, és ellenőrzi a mentett actiont.
+- Két célzott Windows-runner teszt sikeres. A GUI-indítós teszt valódi `pythonw.exe` folyamatból igazolja a konzol hiányát, a gyermek érvényes kimenetét, a hibakódok megőrzését és a naplózási hiba kezelését. Teljes backendtesztet csak emiatt nem futtattunk újra.
+- Első automatikus futás: 20:26:11–20:26:16, `status=sent`, kilépési kód 0, `launcher=windowless`, `console_attached=false`. A Pi Codex-kártya frissült 20:26:18-kor. Második automatikus futás: 20:28:11–20:28:16, szintén `sent`, 0 és `console_attached=false`; a Pi 20:28:18-kor frissült. A kétperces ütemezés és az ablak nélküli futás így két egymást követő körben igazolt.
+- Helyi bizonyíték: `.local/windowless-task-update.json`, `.local/windowless-pi-evidence.jsonl`, `.local/steel-bridge-run.jsonl`.
 
 ## Kijelző finomítása: Pi-re telepítve, 2026-10-25 10:20
 
@@ -67,6 +77,15 @@ Ellenőrzések: 3 bridge-, 3 CLI-felismerési és 1 Windows-runner teszt sikeres
 - STEEL Chrome: `chrome://extensions` → Fejlesztői mód → Kicsomagolt bővítmény betöltése → `D:\GITHUB\P_config\browser_extension`. A STEEL saját böngészőjében kell bejelentkezni a szolgáltatásokba. A Chrome-nak és a Windows-felhasználói munkamenetnek futnia kell.
 - A Grok már automatikus (`source=browser`); a 10:21-es élő kijelzőpróbában 28,03% maradék keretet mutatott. Az Instagram/TikTok állapotát ettől külön kell ellenőrizni.
 - A bővítmény szándékosan figyeli a pontos profilt és URL-t. Másik profilra navigálás, hiányzó/kerekített számláló, login vagy CAPTCHA esetén nem küld hibás nullát. Utolsó adat megmarad, tíz perc után elavulási jelzéssel.
+
+## Csak látható kártyák böngészős frissítése: 2026-10-29
+
+- A Pi `/api/display` végpontja az ellenőrzéskor csak a Codex és a Grok bekapcsolt kártyáját adta vissza. Az Instagram és TikTok már ki volt kapcsolva; élő Pi-beállítást nem kellett módosítani.
+- A bővítmény 1.0.1 minden frissítési kör előtt lekéri a látható kártyákat. Kikapcsolt kártyához nem nyit és nem tölt újra lapot; a már nyitott lapot nem zárja be. A tartalmi számlálófigyelés és az adatküldés is szünetel, a korábbi kártyaérték megmarad.
+- Ha a Pi nem érhető el vagy hibás kártyalistát ad, nem indít közösségi oldalfrissítést. Visszakapcsolás után a következő kétperces körben újra gyűjt. A bővítmény állapotoldala a kikapcsolt kártyákhoz szünetelést jelez.
+- A STEEL párosított telepítésében öt titokmentes fájl frissítve: `background.js`, `content.js`, `options.js`, `options.html`, `manifest.json`. A korábbi fájlok mentése `.local/browser-extension-before-20261029-141309`; a bootstrap és Chrome-profil változatlan. A telepített fájlok hash-egyezése ellenőrzött.
+- A Chrome az ellenőrzéskor nem futott; a módosítás következő indításkor aktiválódik. Éles böngészős futást most nem indítottunk. A Pi szerverkódja és a Codex ütemezése változatlan.
+- `node tests/browser_refresh.cjs`: bekapcsolt/kikapcsolt kártya, visszakapcsolás, adatküldés tiltása, Pi-hiba, hibás válasz, globális kikapcsolás és tartalmi számlálófigyelés ellenőrzött. A 14 parser-ellenőrzés is sikeres.
 
 ## Ellenőrzések és megőrzés
 
